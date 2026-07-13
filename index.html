@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIAP - Cement Inspector Audit Pro (Live)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root[data-theme="light"] {
+            --bg-primary: #f5f7fa; --bg-card: #ffffff; --text-main: #1e293b; --accent: #0071e3; --border-color: #e2e8f0; --success: #34c759;
+        }
+        :root[data-theme="dark"] {
+            --bg-primary: #0b0f19; --bg-card: #161f30; --text-main: #f8fafc; --accent: #0a84ff; --border-color: #24334d; --success: #30d158;
+        }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-primary); color: var(--text-main); transition: background 0.3s; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: var(--bg-card); border-bottom: 1px solid var(--border-color); }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        .card { background: var(--bg-card); border-radius: 12px; padding: 2rem; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        .form-group { margin-bottom: 1.2rem; display: flex; flex-direction: column; }
+        .form-group label { margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; }
+        select, input { padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: inherit; font-size: 1rem; }
+        .btn-primary { background: var(--accent); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-secondary { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card h3 { font-size: 0.85rem; opacity: 0.7; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card p { font-size: 2.2rem; font-weight: bold; margin: 0.5rem 0 0 0; color: var(--accent); }
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-top: 1.5rem; }
+        .option-btn { background: var(--bg-primary); border: 1px solid var(--border-color); padding: 1.2rem; border-radius: 8px; text-align: left; color: inherit; cursor: pointer; transition: 0.2s; font-size: 1rem; }
+        .option-btn:hover, .option-btn.selected { border-color: var(--accent); background: rgba(10, 132, 255, 0.1); }
+        .progress-bar { background: var(--border-color); height: 8px; border-radius: 4px; overflow: hidden; margin: 1.5rem 0; }
+        #progressFill { background: var(--accent); height: 100%; width: 0%; transition: width 0.3s; }
+        .chart-container { position: relative; height: 320px; width: 100%; }
+        .hidden { display: none !important; }
+        .badge { padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        .badge-warn { background: #ff9f0a; color: #000; }
+        .badge-danger { background: #ff453a; color: #fff; }
+        .badge-success { background: var(--success); color: #fff; }
+        .exam-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .loading { opacity: 0.5; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div style="font-weight: bold; font-size: 1.3rem;">🏭 CIAP <span class="badge badge-success">Live Sync</span></div>
+        <div id="userProfile">Non connecté</div>
+        <button id="themeToggle" class="btn-secondary">🌓 Mode</button>
+    </header>
+
+    <main class="container">
+        
+        <section id="loginScreen" class="card">
+            <h2>Authentification Centrale CIAP</h2>
+            <p style="opacity:0.7; margin-top:-10px;">Vérification des habilitations en cours sur la base de données de l'usine...</p>
+            <form id="loginForm">
+                <div class="form-group"><label>Email</label><input type="email" id="email" required placeholder="votre.nom@cimenterie.com"></div>
+                <div class="form-group"><label>Mot de passe</label><input type="password" id="password" required placeholder="••••••••"></div>
+                <button type="submit" id="loginBtn" class="btn-primary">Connexion Sécurisée</button>
+            </form>
+        </section>
+
+        <section id="dashboardScreen" class="hidden">
+            <div class="dashboard-grid">
+                <div class="card stat-card"><h3>Statut Base de données</h3><p style="color:var(--success); font-size:1.5rem;">Connecté à Sheets</p></div>
+                <div class="card stat-card"><h3>Profil Actif</h3><p id="dashRole" style="font-size:1.5rem;">--</p></div>
+            </div>
+
+            <div class="card" id="setupContainer">
+                <h3>🛠️ Configuration du Questionnaire Aléatoire</h3>
+                <div class="setup-grid">
+                    <div class="form-group">
+                        <label>Domaine d'Audit</label>
+                        <select id="cfgDomaine">
+                            <option value="Tous">Tous les domaines</option>
+                            <option value="Maintenance mécanique">Maintenance mécanique</option>
+                            <option value="Inspection">Inspection</option>
+                            <option value="Fiabilité">Fiabilité</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre maximum de questions</label>
+                        <select id="cfgNb">
+                            <option value="5">5 Questions</option>
+                            <option value="10" selected>10 Questions</option>
+                        </select>
+                    </div>
+                </div>
+                <button id="btnStartExam" class="btn-primary" style="width:auto;">Démarrer la Session Dynamique</button>
+            </div>
+
+            <div class="card">
+                <h3>📊 Diagnostic de Performance d'Inspection</h3>
+                <div class="chart-container"><canvas id="radarChart"></canvas></div>
+            </div>
+        </section>
+
+        <section id="examScreen" class="card hidden">
+            <div class="exam-header">
+                <div><span class="badge badge-warn" id="lblDomaine">--</span></div>
+                <div><span id="questionTimer" class="badge badge-danger">--s</span></div>
+            </div>
+            <div class="progress-bar"><div id="progressFill"></div></div>
+            <div id="questionBox">
+                <h2 id="questionText">--</h2>
+                <div id="optionsContainer" class="options-grid"></div>
+            </div>
+            <button id="btnNext" class="btn-primary" style="width:auto; margin-top:1.5rem;">Soumettre la réponse</button>
+        </section>
+
+        <section id="reportScreen" class="card hidden">
+            <h2 style="color:var(--success)">📝 Évaluation Terminée</h2>
+            <p>Transmission des métriques de performance à la direction...</p>
+            <div class="dashboard-grid">
+                <div class="card stat-card"><h3>Résultat Final</h3><p id="repScore">0%</p></div>
+                <div class="card stat-card"><h3>Statut Qualité</h3><p id="repStatus">--</p></div>
+            </div>
+            <button id="btnReturn" class="btn-secondary">Retour à la console</button>
+        </section>
+    </main>
+
+    <script>
+        // =================================================================
+        // CONFIGURATION URL UNIQUE DU DÉPLOIEMENT APPS SCRIPT
+        // =================================================================
+        const WEB_APP_URL = "https://script.google.com/macros/s/VOTRE_ID_SCRIPT_ICI/exec";
+
+        // --- BANQUE DE DONNÉES TECHNIQUE ---
+        const questionBank = [
+            { domaine:"Maintenance mécanique", sousDomaine:"Roulements", question:"Quelle est la cause principale de défaillance prématurée d'un roulement de ventilateur de tirage de four ?", options:["Défaut de lubrification ou pollution","Vitesse excessive","Changement de teinte de l'acier"], correct:0, temps:20 },
+            { domaine:"Maintenance mécanique", sousDomaine:"Alignement", question:"Lors de l'alignement laser d'un groupe moto-réducteur de broyeur, que compense-t-on en priorité ?", options:["La croissance thermique machine en marche","Le jeu d'engrènement","Le couple de démarrage"], correct:0, temps:25 },
+            { domaine:"Inspection", sousDomaine:"Lubrification", question:"Une huile de réducteur de vis d'alimentation noircie avec une odeur de brûlé traduit :", options:["Une dégradation par oxydation thermique","Une présence d'eau mineure","Un rodage normal"], correct:0, temps:20 },
+            { domaine:"Fiabilité", sousDomaine:"KPI", question:"Si le MTBF d'un concasseur augmente alors que le MTTR diminue, cela signifie que :", options:["La fiabilité s'améliore et les équipes réparent plus vite","La machine tombe plus souvent en panne","La disponibilité chute"], correct:0, temps:30 }
+        ];
+
+        let currentUser = null;
+        let currentExam = [];
+        let indexQ = 0;
+        let answersUser = [];
+        let timerQ;
+        let secQ = 0;
+        let secG = 0;
+        let timerG;
+
+        // Mode Sombre
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            document.documentElement.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+        });
+
+        // REQUÊTE HTTP POST GÉNÉRIQUE (Pour passer outre les limitations CORS locales)
+        async function sendPostRequest(action, data) {
+            const payload = { action: action, data: data };
+            // Utilisation du mode 'no-cors' si nécessaire, mais l'Apps Script configuré gère le retour JSON standard
+            const response = await fetch(WEB_APP_URL, {
+                method: "POST",
+                mode: "cors",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            });
+            return await response.json();
+        }
+
+        // AUTHENTIFICATION COMMUNICANTE
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = document.getElementById('loginForm');
+            form.classList.add('loading');
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const res = await sendPostRequest('login', { email: email, password: password });
+                if (res.success) {
+                    currentUser = res.data;
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('dashboardScreen').classList.remove('hidden');
+                    document.getElementById('userProfile').innerText = currentUser.email;
+                    document.getElementById('dashRole').innerText = currentUser.role;
+                    initRadar();
+                } else {
+                    alert("Erreur : " + res.error);
+                }
+            } catch (err) {
+                alert("Erreur réseau critique ou URL Apps Script invalide.");
+                console.error(err);
+            } finally {
+                form.classList.remove('loading');
+            }
+        });
+
+        // GESTION DU QUESTIONNAIRE LOCAL
+        document.getElementById('btnStartExam').addEventListener('click', () => {
+            const dom = document.getElementById('cfgDomaine').value;
+            const limit = parseInt(document.getElementById('cfgNb').value);
+
+            let pool = questionBank.filter(q => dom === "Tous" || q.domaine === dom);
+            pool.sort(() => Math.random() - 0.5);
+            currentExam = pool.slice(0, limit);
+
+            indexQ = 0; answersUser = []; secG = 0;
+            document.getElementById('dashboardScreen').classList.add('hidden');
+            document.getElementById('examScreen').classList.remove('hidden');
+            
+            timerG = setInterval(() => { secG++; }, 1000);
+            showQuestion();
+        });
+
+        function showQuestion() {
+            if (indexQ >= currentExam.length) { sendResultsToSheets(); return; }
+            clearInterval(timerQ);
+            const q = currentExam[indexQ];
+            
+            document.getElementById('lblDomaine').innerText = q.domaine;
+            document.getElementById('questionText').innerText = q.question;
+            
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = "";
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn";
+                btn.innerText = opt;
+                btn.onclick = () => {
+                    document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    btn.dataset.choice = idx;
+                };
+                container.appendChild(btn);
+            });
+
+            secQ = q.temps;
+            document.getElementById('questionTimer').innerText = `${secQ}s`;
+            timerQ = setInterval(() => {
+                secQ--;
+                document.getElementById('questionTimer').innerText = `${secQ}s`;
+                if(secQ <= 0) validateAnswer();
+            }, 1000);
+
+            document.getElementById('progressFill').style.width = `${(indexQ / currentExam.length) * 100}%`;
+        }
+
+        document.getElementById('btnNext').addEventListener('click', validateAnswer);
+
+        function validateAnswer() {
+            const sel = document.querySelector('.option-btn.selected');
+            answersUser.push(sel ? parseInt(sel.dataset.choice) : -1);
+            indexQ++;
+            showQuestion();
+        }
+
+        // ENVOI AUTOMATIQUE DES ENREGISTREMENTS VERS GOOGLE SHEETS
+        async function sendResultsToSheets() {
+            clearInterval(timerQ); clearInterval(timerG);
+            document.getElementById('examScreen').classList.add('hidden');
+            document.getElementById('reportScreen').classList.remove('hidden');
+
+            let correct = 0;
+            currentExam.forEach((q, i) => { if(answersUser[i] === q.correct) correct++; });
+            const score = Math.round((correct / currentExam.length) * 100);
+            const statut = score >= 70 ? "CONFORME" : "À REFORMER";
+            const tempsTotalStr = `${Math.floor(secG/60)}m ${secG%60}s`;
+
+            document.getElementById('repScore').innerText = score + "%";
+            document.getElementById('repStatus').innerText = statut;
+
+            try {
+                await sendPostRequest('saveResult', {
+                    user: currentUser.email,
+                    domaine: currentExam[0].domaine,
+                    nbQuestions: currentExam.length,
+                    score: score,
+                    statut: statut,
+                    temps: tempsTotalStr
+                });
+            } catch (err) {
+                alert("Échec de synchronisation Cloud. Données perdues.");
+            }
+        }
+
+        document.getElementById('btnReturn').addEventListener('click', () => {
+            document.getElementById('reportScreen').classList.add('hidden');
+            document.getElementById('dashboardScreen').classList.remove('hidden');
+        });
+
+        function initRadar() {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Mécanique', 'Inspection', 'Fiabilité'],
+                    datasets: [{ label: 'Score Moyen (%)', data: [85, 70, 75], backgroundColor: 'rgba(10, 132, 255, 0.2)', borderColor: '#0a84ff', borderWidth: 2 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+    </script>
+</body>
+</html>
