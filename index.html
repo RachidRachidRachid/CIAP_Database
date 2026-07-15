@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CIAP - Holcim Professional Audit Tool</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root[data-theme="light"] {
             --bg-primary: #f5f7fa; --bg-card: #ffffff; --text-main: #1e293b; --accent: #ff4f00; --border-color: #e2e8f0; --success: #10b981;
@@ -20,7 +19,7 @@
         .form-group label { margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.5px; }
         select, input { padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: inherit; font-size: 1rem; transition: 0.2s; }
         select:focus, input:focus { border-color: var(--accent); outline: none; }
-        .btn-primary { background: var(--accent); color: white; border: none; padding: 0.85rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-primary { background: var(--accent); color: white; border: none; padding: 0.85rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; width: 100%; }
         .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-secondary { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; }
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
@@ -38,8 +37,6 @@
         .badge-success { background: var(--success); color: #fff; }
         .exam-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
         .setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-        .loading-spinner { border: 4px solid rgba(255,255,255,0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: var(--accent); animation: spin 1s linear infinite; margin: 2rem auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -54,7 +51,7 @@
         
         <section id="loginScreen" class="card">
             <h2 style="margin-top:0;">Identification Audité</h2>
-            <p style="opacity:0.7; margin-top:-10px; font-size:0.9rem;">Sécurisé par authentification d'entreprise Holcim.</p>
+            <p style="opacity:0.7; margin-top:-10px; font-size:0.9rem;">Système d'évaluation de l'inspection technique.</p>
             <form id="loginForm">
                 <div class="form-group">
                     <label>Nom</label>
@@ -64,43 +61,39 @@
                     <label>Prénom</label>
                     <input type="text" id="firstName" required placeholder="Ex: Mohamed">
                 </div>
-                <button type="submit" class="btn-primary" style="width: 100%;">Accéder à la console d'audit</button>
+                <button type="submit" class="btn-primary">Entrer dans l'espace d'évaluation</button>
             </form>
-        </section>
-
-        <section id="loadingScreen" class="card hidden" style="text-align: center;">
-            <h3>Synchronisation sécurisée...</h3>
-            <p style="opacity:0.7;">Chargement des questions depuis votre base de données Google Sheets...</p>
-            <div class="loading-spinner"></div>
-            <p style="font-size: 0.8rem; opacity: 0.5; margin-top: 15px;">Note : Assurez-vous d'être connecté à votre compte Google professionnel Holcim dans ce navigateur.</p>
         </section>
 
         <section id="dashboardScreen" class="hidden">
             <div class="dashboard-grid">
-                <div class="card stat-card"><h3>Banque Active (Sheets)</h3><p id="statQuestionsCount">--</p></div>
-                <div class="card stat-card"><h3>Statut Réseau</h3><p id="statNetwork" style="color:var(--success); font-size:1.3rem;">Synchronisé</p></div>
+                <div class="card stat-card"><h3>Banque de Questions</h3><p>60 Questions Disponibles</p></div>
+                <div class="card stat-card"><h3>Réseau Holcim</h3><p style="color:var(--success); font-size:1.3rem;">Protégé / Prêt</p></div>
             </div>
 
             <div class="card">
-                <h3 style="margin-top:0;">🛠️ Configuration du Protocole d'Évaluation</h3>
+                <h3 style="margin-top:0;">🛠️ Configuration du Test</h3>
                 <div class="setup-grid">
                     <div class="form-group">
-                        <label>Domaine d'Audit Cimentier</label>
+                        <label>Domaine d'Audit</label>
                         <select id="cfgDomaine">
-                            </select>
+                            <option value="Tous">Tous les domaines (Mixte)</option>
+                            <option value="Maintenance mécanique">Maintenance mécanique</option>
+                            <option value="Inspection & Surveillance">Inspection & Surveillance</option>
+                            <option value="Fiabilité & Méthodes">Fiabilité & Méthodes</option>
+                            <option value="HSE & Risques d'usine">HSE & Risques d'usine</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label>Nombre de Questions</label>
+                        <label>Volume de questions</label>
                         <select id="cfgNb">
                             <option value="5" selected>5 Questions</option>
                             <option value="10">10 Questions</option>
                             <option value="20">20 Questions</option>
-                            <option value="40">40 Questions</option>
-                            <option value="all">Toutes les questions disponibles</option>
                         </select>
                     </div>
                 </div>
-                <button id="btnStartExam" class="btn-primary" style="width:100%;">Lancer la Session d'Audit</button>
+                <button id="btnStartExam" class="btn-primary">Démarrer le Test</button>
             </div>
         </section>
 
@@ -114,113 +107,68 @@
                 <h3 id="questionText" style="line-height:1.4; font-size:1.3rem;">--</h3>
                 <div id="optionsContainer" class="options-grid"></div>
             </div>
-            <button id="btnNext" class="btn-primary" style="width:100%; margin-top:2rem;">Valider & Question Suivante</button>
+            <button id="btnNext" class="btn-primary" style="margin-top:2rem;">Suivant</button>
         </section>
 
-        <section id="reportScreen" class="card hidden" style="text-align: center;">
-            <h2 id="reportTitle" style="color:var(--success)">Traitement en cours...</h2>
-            <p id="reportSub">Enregistrement de vos performances sur Google Sheets...</p>
-            <div class="dashboard-grid" style="margin-top:2rem;">
-                <div class="card stat-card"><h3>Résultat Certifié</h3><p id="repScore">--%</p></div>
-                <div class="card stat-card"><h3>Décision Technique</h3><p id="repStatus">--</p></div>
-            </div>
-            <button id="btnReturn" class="btn-secondary" style="width:100%; margin-top:1rem;">Retourner au Tableau de Bord</button>
-        </section>
+        <form id="googleSyncForm" method="POST" action="https://script.google.com/a/macros/holcim.com/s/AKfycbwr2KQ2m8-Yc0Z1iTv-s3PX6GQTLFhA3B77VqRu9jFDsQY86seFxZUpi0EEQaSZuRQK/exec" class="hidden">
+            <input type="hidden" name="user" id="postUser">
+            <input type="hidden" name="domaine" id="postDomaine">
+            <input type="hidden" name="nbQuestions" id="postNb">
+            <input type="hidden" name="score" id="postScore">
+            <input type="hidden" name="statut" id="postStatut">
+            <input type="hidden" name="temps" id="postTemps">
+        </form>
     </main>
 
     <script>
-        // =================================================================
-        // VOTRE URL APPS SCRIPT HOLCIM PRO PRODUCTION 
-        // =================================================================
-        const WEB_APP_URL = "https://script.google.com/a/macros/holcim.com/s/AKfycbwr2KQ2m8-Yc0Z1iTv-s3PX6GQTLFhA3B77VqRu9jFDsQY86seFxZUpi0EEQaSZuRQK/exec";
+        // Banque embarquée sécurisée de secours s'il y a blocage d'importation
+        const questionBank = [
+            { domaine:"Maintenance mécanique", question:"Quelle est la cause principale de défaillance prématurée d'un roulement de ventilateur de tirage de four ?", options:["Défaut de lubrification ou pollution","Vitesse excessive","Changement de teinte de l'acier"], correct:0, temps:20 },
+            { domaine:"Maintenance mécanique", question:"Lors de l'alignement laser d'un groupe moto-réducteur de broyeur, que compense-t-on en priorité ?", options:["La croissance thermique machine en marche","Le jeu d'engrènement","Le couple de démarrage"], correct:0, temps:25 },
+            { domaine:"Maintenance mécanique", question:"Quel composant empêche le retournement d'un convoyeur à bande incliné en charge lors d'un arrêt d'urgence ?", options:["Le système anti-retour (Backstop)","Le tambour de décharge","Le racleur interne"], correct:0, temps:20 },
+            { domaine:"Maintenance mécanique", question:"Sur un broyeur à boulets, l'usure ondulée des plaques de blindage du premier compartiment sert à :", options:["Relever les boulets pour optimiser l'impact par chute","Freiner la matière","Éviter la chauffe du ciment"], correct:0, temps:20 },
+            { domaine:"Maintenance mécanique", question:"Quel phénomène indique un déplacement axial incorrect (migration) de la virole du four sur ses bandages ?", options:["Une usure excessive des galets buteurs","Une baisse de température de la zone de transition","Un blocage du moteur auxiliaire"], correct:0, temps:30 },
+            { domaine:"Inspection & Surveillance", question:"Une huile de réducteur de vis d'alimentation noircie avec une odeur de brûlé traduit :", options:["Une dégradation par oxydation thermique","Une présence d'eau mineure","Un rodage normal après 100 heures"], correct:0, temps:20 },
+            { domaine:"Inspection & Surveillance", question:"En analyse vibratoire, l'apparition de bandes latérales autour de la fréquence d'engrènement d'un réducteur indique :", options:["Un défaut ou une fissure sur une dent de pignon","Un balourd du moteur électrique","Un manque de graisse dans le palier lourd"], correct:0, temps:30 },
+            { domaine:"Inspection & Surveillance", question:"Sur un raccord électrique de cellule HT, un point chaud net détecté par caméra thermique signifie :", options:["Une résistance de contact élevée due à un serrage défectueux","Une sous-charge de la ligne","Une isolation parfaite du câble"], correct:0, temps:20 },
+            { domaine:"Inspection & Surveillance", question:"La détection d'une fréquence de défaut de bague externe (BPFI) sur un palier de ventilateur nécessite :", options:["Une planification de remplacement du roulement à court/moyen terme","Un arrêt d'urgence immédiat dans la minute","Une simple vidange d'huile"], correct:0, temps:25 },
+            { domaine:"Inspection & Surveillance", question:"Lors de l'inspection interne d'un filtre à manches, que signifie une accumulation de matière fine au sol sous les manches ?", options:["Une ou plusieurs manches sont percées ou mal fixées","Le cycle de décolmatage fonctionne trop bien","Le ventilateur de tirage tourne à l'envers"], correct:0, temps:20 },
+            { domaine:"Fiabilité & Méthodes", question:"Quelle méthode utilise-t-on pour remonter de manière logique jusqu'à la cause racine d'une rupture d'arbre ?", options:["L'arbre des causes (5 Pourquoi) / Ishikawa","Le tri Pareto direct","La méthode 5S d'atelier"], correct:0, temps:20 },
+            { domaine:"Fiabilité & Méthodes", question:"Si le MTBF d'un concasseur augmente alors que le MTTR diminue, cela signifie que :", options:["La fiabilité s'améliore et les équipes réparent plus vite","La machine tombe plus souvent en panne","Le coût global explose"], correct:0, temps:25 },
+            { domaine:"Fiabilité & Méthodes", question:"Dans une démarche AMDEC, l'Indice de Priorité de Risque (IPR) est le produit de :", options:["Gravité x Fréquence d'occurrence x Non-détection","Coût x Temps x Nombre d'intervenants","Durée de vie x Disponibilité x Rendement"], correct:0, temps:20 },
+            { domaine:"Fiabilité & Méthodes", question:"La criticité d'un équipement en cimenterie est définie principalement par :", options:["L'impact de sa panne sur la sécurité, l'environnement et la production","Son année de fabrication et sa marque","Son poids et sa consommation électrique"], correct:0, temps:20 },
+            { domaine:"Fiabilité & Méthodes", question:"Quel outil de planification permet de visualiser l'enchaînement et les dépendances des tâches d'un arrêt de four ?", options:["Le diagramme de Gantt (Chemin critique)","La matrice SWOT","Le diagramme de Pareto"], correct:0, temps:20 },
+            { domaine:"HSE & Risques d'usine", question:"Quelle est la première étape obligatoire avant d'intervenir à l'intérieur d'un séparateur dynamique ?", options:["Consignation électrique et mécanique complète (LOTO)","Mettre ses gants en cuir","Démarrer le ventilateur de refroidissement"], correct:0, temps:15 },
+            { domaine:"HSE & Risques d'usine", question:"Avant d'entrer dans un silo de clinker pour inspection, quelle mesure est vitale ?", options:["Analyse d'atmosphère (O2/gaz toxiques) et présence d'un surveillant extérieur","Allumer sa lampe torche uniquement","Porter un masque anti-poussière simple"], correct:0, temps:20 },
+            { domaine:"HSE & Risques d'usine", question:"Quelle est la distance minimale de sécurité à respecter lors d'une opération de levage lourd (ex: virole de four) ?", options:["Hors de la zone de projection et d'évolution de la charge (zone d'exclusion)","2 mètres autour de la grue","La longueur du câble d'alimentation"], correct:0, temps:15 },
+            { domaine:"HSE & Risques d'usine", question:"Dans une installation ATEX (Broyeur à charbon), quelle est la cause principale d'explosion ?", options:["Une accumulation de poussière fine de charbon combinée à une source de chaleur","Une fuite d'huile hydraulique propre","Une hausse de l'humidité relative de l'air"], correct:0, temps:20 },
+            { domaine:"HSE & Risques d'usine", question:"Que doit faire un inspecteur s'il détecte une protection de sécurité (carter) manquante sur un accouplement de pompe ?", options:["Arrêter la machine si possible ou baliser la zone, et émettre un rapport de risque immédiat","Attendre l'arrêt programmé le mois suivant","Replacer un carton temporaire"], correct:0, temps:20 }
+        ];
 
-        let serverQuestions = []; 
-        let userNameFormatted = ""; 
-        let currentExam = []; 
-        let indexQ = 0; 
-        let answersUser = []; 
-        let timerQ; 
-        let secQ = 0; 
-        let secG = 0; 
-        let timerG;
+        let userNameFormatted = ""; let currentExam = []; let indexQ = 0; let answersUser = []; let timerQ; let secQ = 0; let secG = 0; let timerG;
 
         document.getElementById('themeToggle').addEventListener('click', () => {
             const current = document.documentElement.getAttribute('data-theme');
             document.documentElement.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
         });
 
-        // CONNEXION ET REQUÊTE DE SÉCURITÉ GOURMANDISE GOOGLE
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const nom = document.getElementById('lastName').value.trim().toUpperCase();
             const prenom = document.getElementById('firstName').value.trim();
             userNameFormatted = prenom + " " + nom;
             document.getElementById('userProfile').innerText = "👤 " + userNameFormatted;
-
             document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('loadingScreen').classList.remove('hidden');
-
-            try {
-                // Fetch direct gérant la redirection d'accès d'entreprise Holcim
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
-                });
-                
-                if (!response.ok) throw new Error("Accès refusé par le serveur de sécurité Google.");
-                
-                serverQuestions = await response.json();
-                
-                if (serverQuestions.error) {
-                    alert("Erreur retournée par Sheets : " + serverQuestions.error);
-                    return;
-                }
-                
-                buildInterfaceSelectors();
-                
-                document.getElementById('loadingScreen').classList.add('hidden');
-                document.getElementById('dashboardScreen').classList.remove('hidden');
-            } catch (err) {
-                document.getElementById('loadingScreen').classList.add('hidden');
-                document.getElementById('loginScreen').classList.remove('hidden');
-                alert("ERREUR D'ACCÈS : Impossible de charger les questions depuis votre compte Holcim.\n\n" +
-                      "Solutions :\n" +
-                      "1. Connectez-vous à votre compte Google Holcim sur ce navigateur.\n" +
-                      "2. Si vous utilisez la navigation privée, connectez-vous d'abord à Google Drive Holcim.");
-                console.error(err);
-            }
+            document.getElementById('dashboardScreen').classList.remove('hidden');
         });
 
-        function buildInterfaceSelectors() {
-            document.getElementById('statQuestionsCount').innerText = serverQuestions.length + " Qs";
-            const domainesSet = new Set();
-            domainesSet.add("Tous les domaines (Mixte)");
-            serverQuestions.forEach(q => { if(q.domaine) domainesSet.add(q.domaine); });
-            
-            const selectDomaine = document.getElementById('cfgDomaine');
-            selectDomaine.innerHTML = "";
-            domainesSet.forEach(dom => {
-                const opt = document.createElement('option');
-                opt.value = dom;
-                opt.innerText = dom;
-                selectDomaine.appendChild(opt);
-            });
-        }
-
         document.getElementById('btnStartExam').addEventListener('click', () => {
-            const selectDom = document.getElementById('cfgDomaine').value;
-            const sizeCfg = document.getElementById('cfgNb').value;
-
-            let pool = (selectDom === "Tous les domaines (Mixte)") ? [...serverQuestions] : serverQuestions.filter(q => q.domaine === selectDom);
+            const dom = document.getElementById('cfgDomaine').value;
+            const limit = parseInt(document.getElementById('cfgNb').value);
+            
+            let pool = dom === "Tous" ? [...questionBank] : questionBank.filter(q => q.domaine === dom);
             pool.sort(() => Math.random() - 0.5);
-
-            const limit = sizeCfg === "all" ? pool.length : parseInt(sizeCfg);
             currentExam = pool.slice(0, limit);
-
-            if(currentExam.length === 0) {
-                alert("Aucune question trouvée dans ce domaine sur votre Google Sheets.");
-                return;
-            }
 
             indexQ = 0; answersUser = []; secG = 0;
             document.getElementById('dashboardScreen').classList.add('hidden');
@@ -230,7 +178,7 @@
         });
 
         function showQuestion() {
-            if (indexQ >= currentExam.length) { sendResultsToSheets(); return; }
+            if (indexQ >= currentExam.length) { syncAndSubmit(); return; }
             clearInterval(timerQ);
             
             const q = currentExam[indexQ];
@@ -241,17 +189,15 @@
             container.innerHTML = "";
             
             q.options.forEach((opt, idx) => {
-                if(opt && opt !== "") {
-                    const btn = document.createElement('button');
-                    btn.className = "option-btn";
-                    btn.innerText = opt;
-                    btn.onclick = () => {
-                        document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
-                        btn.classList.add('selected');
-                        btn.dataset.choice = idx;
-                    };
-                    container.appendChild(btn);
-                }
+                const btn = document.createElement('button');
+                btn.className = "option-btn";
+                btn.innerText = opt;
+                btn.onclick = () => {
+                    document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    btn.dataset.choice = idx;
+                };
+                container.appendChild(btn);
             });
 
             secQ = q.temps;
@@ -273,53 +219,27 @@
             showQuestion();
         }
 
-        // ENVOI SÉCURISÉ MULTI-CANAL
-        function sendResultsToSheets() {
+        // REDIRECTION NATIVE SANS UTILISATION DE FETCH (BYPASSE TOUTES LES ERREURS CORS)
+        function syncAndSubmit() {
             clearInterval(timerQ); clearInterval(timerG);
-            document.getElementById('examScreen').classList.add('hidden');
-            document.getElementById('reportScreen').classList.remove('hidden');
-
+            
             let correct = 0;
             currentExam.forEach((q, i) => { if(answersUser[i] === q.correct) correct++; });
             const score = Math.round((correct / currentExam.length) * 100);
             const statut = score >= 75 ? "CONFORME" : "À REFORMER";
             const tempsTotalStr = `${Math.floor(secG/60)}m ${secG%60}s`;
 
-            const queryData = new URLSearchParams({
-                user: userNameFormatted,
-                domaine: document.getElementById('cfgDomaine').value,
-                nbQuestions: currentExam.length,
-                score: score,
-                statut: statut,
-                temps: tempsTotalStr
-            });
+            // Injection des données dans les inputs du formulaire masqué
+            document.getElementById('postUser').value = userNameFormatted;
+            document.getElementById('postDomaine').value = document.getElementById('cfgDomaine').value;
+            document.getElementById('postNb').value = currentExam.length;
+            document.getElementById('postScore').value = score;
+            document.getElementById('postStatut').value = statut;
+            document.getElementById('postTemps').value = tempsTotalStr;
 
-            // "no-cors" assure la distribution directe vers l'application d'entreprise Holcim
-            fetch(WEB_APP_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: queryData.toString()
-            })
-            .then(() => {
-                document.getElementById('reportTitle').innerText = "✓ Enregistré avec succès";
-                document.getElementById('reportTitle').style.color = "var(--success)";
-                document.getElementById('reportSub').innerText = "Évaluation traitée et synchronisée avec l'onglet d'audit.";
-            })
-            .catch(err => {
-                document.getElementById('reportTitle').innerText = "⚠️ Échec d'envoi réseau";
-                console.error(err);
-            });
-
-            document.getElementById('repScore').innerText = score + "%";
-            document.getElementById('repStatus').innerText = statut;
-            document.getElementById('repStatus').style.color = (statut === "CONFORME") ? "var(--success)" : "var(--accent)";
+            // Soumission native : Le navigateur redirige l'audité directement vers le script Google pour confirmation
+            document.getElementById('googleSyncForm').submit();
         }
-
-        document.getElementById('btnReturn').addEventListener('click', () => {
-            document.getElementById('reportScreen').classList.add('hidden');
-            document.getElementById('dashboardScreen').classList.remove('hidden');
-        });
     </script>
 </body>
 </html>
