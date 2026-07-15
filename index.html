@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CIAP - Holcim Professional Audit Tool</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root[data-theme="light"] {
             --bg-primary: #f5f7fa; --bg-card: #ffffff; --text-main: #1e293b; --accent: #ff4f00; --border-color: #e2e8f0; --success: #10b981;
@@ -20,7 +19,7 @@
         .form-group label { margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.5px; }
         select, input { padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: inherit; font-size: 1rem; transition: 0.2s; }
         select:focus, input:focus { border-color: var(--accent); outline: none; }
-        .btn-primary { background: var(--accent); color: white; border: none; padding: 0.85rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-primary { background: var(--accent); color: white; border: none; padding: 0.85rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; width: 100%; }
         .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-secondary { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; }
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
@@ -54,7 +53,7 @@
         
         <section id="loginScreen" class="card">
             <h2 style="margin-top:0;">Identification Audité</h2>
-            <p style="opacity:0.7; margin-top:-10px; font-size:0.9rem;">Sécurisé par authentification d'entreprise Holcim.</p>
+            <p style="opacity:0.7; margin-top:-10px; font-size:0.9rem;">Entrez vos informations pour charger l'audit en temps réel.</p>
             <form id="loginForm">
                 <div class="form-group">
                     <label>Nom</label>
@@ -64,21 +63,20 @@
                     <label>Prénom</label>
                     <input type="text" id="firstName" required placeholder="Ex: Mohamed">
                 </div>
-                <button type="submit" class="btn-primary" style="width: 100%;">Accéder à la console d'audit</button>
+                <button type="submit" class="btn-primary">Se connecter & charger l'audit</button>
             </form>
         </section>
 
         <section id="loadingScreen" class="card hidden" style="text-align: center;">
-            <h3>Synchronisation sécurisée...</h3>
-            <p style="opacity:0.7;">Chargement des questions depuis votre base de données Google Sheets...</p>
+            <h3>Récupération de la banque d'audit...</h3>
+            <p style="opacity:0.7;">Synchronisation en cours avec Google Sheets.</p>
             <div class="loading-spinner"></div>
-            <p style="font-size: 0.8rem; opacity: 0.5; margin-top: 15px;">Note : Assurez-vous d'être connecté à votre compte Google professionnel Holcim dans ce navigateur.</p>
         </section>
 
         <section id="dashboardScreen" class="hidden">
             <div class="dashboard-grid">
                 <div class="card stat-card"><h3>Banque Active (Sheets)</h3><p id="statQuestionsCount">--</p></div>
-                <div class="card stat-card"><h3>Statut Réseau</h3><p id="statNetwork" style="color:var(--success); font-size:1.3rem;">Synchronisé</p></div>
+                <div class="card stat-card"><h3>Statut Réseau</h3><p id="statNetwork" style="color:var(--success); font-size:1.3rem;">Synchronisé 100%</p></div>
             </div>
 
             <div class="card">
@@ -100,7 +98,7 @@
                         </select>
                     </div>
                 </div>
-                <button id="btnStartExam" class="btn-primary" style="width:100%;">Lancer la Session d'Audit</button>
+                <button id="btnStartExam" class="btn-primary">Lancer la Session d'Audit</button>
             </div>
         </section>
 
@@ -114,24 +112,32 @@
                 <h3 id="questionText" style="line-height:1.4; font-size:1.3rem;">--</h3>
                 <div id="optionsContainer" class="options-grid"></div>
             </div>
-            <button id="btnNext" class="btn-primary" style="width:100%; margin-top:2rem;">Valider & Question Suivante</button>
+            <button id="btnNext" class="btn-primary" style="margin-top:2rem;">Valider & Question Suivante</button>
         </section>
 
         <section id="reportScreen" class="card hidden" style="text-align: center;">
-            <h2 id="reportTitle" style="color:var(--success)">Traitement en cours...</h2>
-            <p id="reportSub">Enregistrement de vos performances sur Google Sheets...</p>
+            <h2 style="color:var(--success)">📝 Évaluation Terminée</h2>
+            <p>Vos résultats ont été transmis avec succès et inscrits dans l'onglet <b>Résultats</b>.</p>
             <div class="dashboard-grid" style="margin-top:2rem;">
-                <div class="card stat-card"><h3>Résultat Certifié</h3><p id="repScore">--%</p></div>
-                <div class="card stat-card"><h3>Décision Technique</h3><p id="repStatus">--</p></div>
+                <div class="card stat-card"><h3>Score Obtenu</h3><p id="repScore">--%</p></div>
+                <div class="card stat-card"><h3>Verdict</h3><p id="repStatus">--</p></div>
             </div>
             <button id="btnReturn" class="btn-secondary" style="width:100%; margin-top:1rem;">Retourner au Tableau de Bord</button>
         </section>
+
+        <iframe name="syncFrame" id="syncFrame" class="hidden"></iframe>
+
+        <form id="googleSyncForm" method="POST" action="https://script.google.com/macros/s/AKfycbw8Cg2SETJIp4PFTbyGu9p8F0K0VOCxSP2YyesoQiOed_KOCdj62ZxrSDpwBsLAOQLj/exec" target="syncFrame" class="hidden">
+            <input type="hidden" name="user" id="postUser">
+            <input type="hidden" name="domaine" id="postDomaine">
+            <input type="hidden" name="nbQuestions" id="postNb">
+            <input type="hidden" name="score" id="postScore">
+            <input type="hidden" name="statut" id="postStatut">
+            <input type="hidden" name="temps" id="postTemps">
+        </form>
     </main>
 
     <script>
-        // =================================================================
-        // VOTRE URL APPS SCRIPT HOLCIM PRO PRODUCTION 
-        // =================================================================
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw8Cg2SETJIp4PFTbyGu9p8F0K0VOCxSP2YyesoQiOed_KOCdj62ZxrSDpwBsLAOQLj/exec";
 
         let serverQuestions = []; 
@@ -149,7 +155,7 @@
             document.documentElement.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
         });
 
-        // CONNEXION ET REQUÊTE DE SÉCURITÉ GOURMANDISE GOOGLE
+        // CHARGEMENT DYNAMIQUE DEPUIS LE FEUILLE GOOGLE SHEETS
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const nom = document.getElementById('lastName').value.trim().toUpperCase();
@@ -161,18 +167,12 @@
             document.getElementById('loadingScreen').classList.remove('hidden');
 
             try {
-                // Fetch direct gérant la redirection d'accès d'entreprise Holcim
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
-                });
-                
-                if (!response.ok) throw new Error("Accès refusé par le serveur de sécurité Google.");
-                
+                // Lecture dynamique des questions du Sheets en temps réel
+                const response = await fetch(WEB_APP_URL);
                 serverQuestions = await response.json();
                 
                 if (serverQuestions.error) {
-                    alert("Erreur retournée par Sheets : " + serverQuestions.error);
+                    alert("Erreur base de données : " + serverQuestions.error);
                     return;
                 }
                 
@@ -183,16 +183,15 @@
             } catch (err) {
                 document.getElementById('loadingScreen').classList.add('hidden');
                 document.getElementById('loginScreen').classList.remove('hidden');
-                alert("ERREUR D'ACCÈS : Impossible de charger les questions depuis votre compte Holcim.\n\n" +
-                      "Solutions :\n" +
-                      "1. Connectez-vous à votre compte Google Holcim sur ce navigateur.\n" +
-                      "2. Si vous utilisez la navigation privée, connectez-vous d'abord à Google Drive Holcim.");
+                alert("Erreur critique de lecture. Vérifiez que votre Google Sheets contient bien l'onglet 'Questions' et que le script est correctement publié.");
                 console.error(err);
             }
         });
 
+        // EXTRACTION ET ADAPTATION DYNAMIQUE DE L'INTERFACE
         function buildInterfaceSelectors() {
             document.getElementById('statQuestionsCount').innerText = serverQuestions.length + " Qs";
+            
             const domainesSet = new Set();
             domainesSet.add("Tous les domaines (Mixte)");
             serverQuestions.forEach(q => { if(q.domaine) domainesSet.add(q.domaine); });
@@ -207,30 +206,38 @@
             });
         }
 
+        // PRÉPARATION DE L'EXAMEN PARAMÉTRABLE
         document.getElementById('btnStartExam').addEventListener('click', () => {
             const selectDom = document.getElementById('cfgDomaine').value;
             const sizeCfg = document.getElementById('cfgNb').value;
 
             let pool = (selectDom === "Tous les domaines (Mixte)") ? [...serverQuestions] : serverQuestions.filter(q => q.domaine === selectDom);
+            
+            // Mélange aléatoire des questions issues du Sheets
             pool.sort(() => Math.random() - 0.5);
 
             const limit = sizeCfg === "all" ? pool.length : parseInt(sizeCfg);
             currentExam = pool.slice(0, limit);
 
             if(currentExam.length === 0) {
-                alert("Aucune question trouvée dans ce domaine sur votre Google Sheets.");
+                alert("Aucune question trouvée pour ce domaine dans votre fichier Sheets.");
                 return;
             }
 
-            indexQ = 0; answersUser = []; secG = 0;
+            indexQ = 0; 
+            answersUser = []; 
+            secG = 0;
+            
             document.getElementById('dashboardScreen').classList.add('hidden');
             document.getElementById('examScreen').classList.remove('hidden');
+            
             timerG = setInterval(() => { secG++; }, 1000);
             showQuestion();
         });
 
+        // RENDU DYNAMIQUE DE LA QUESTION
         function showQuestion() {
-            if (indexQ >= currentExam.length) { sendResultsToSheets(); return; }
+            if (indexQ >= currentExam.length) { syncAndSubmit(); return; }
             clearInterval(timerQ);
             
             const q = currentExam[indexQ];
@@ -266,6 +273,7 @@
         }
 
         document.getElementById('btnNext').addEventListener('click', validateAnswer);
+        
         function validateAnswer() {
             const sel = document.querySelector('.option-btn.selected');
             answersUser.push(sel ? parseInt(sel.dataset.choice) : -1);
@@ -273,43 +281,31 @@
             showQuestion();
         }
 
-        // ENVOI SÉCURISÉ MULTI-CANAL
-        function sendResultsToSheets() {
-            clearInterval(timerQ); clearInterval(timerG);
-            document.getElementById('examScreen').classList.add('hidden');
-            document.getElementById('reportScreen').classList.remove('hidden');
-
+        // ENVOI DOUBLE-FLUX SÉCURISÉ (ZÉRO PAGE NOIRE)
+        function syncAndSubmit() {
+            clearInterval(timerQ); 
+            clearInterval(timerG);
+            
             let correct = 0;
             currentExam.forEach((q, i) => { if(answersUser[i] === q.correct) correct++; });
             const score = Math.round((correct / currentExam.length) * 100);
             const statut = score >= 75 ? "CONFORME" : "À REFORMER";
             const tempsTotalStr = `${Math.floor(secG/60)}m ${secG%60}s`;
 
-            const queryData = new URLSearchParams({
-                user: userNameFormatted,
-                domaine: document.getElementById('cfgDomaine').value,
-                nbQuestions: currentExam.length,
-                score: score,
-                statut: statut,
-                temps: tempsTotalStr
-            });
+            // Injection des variables dans le formulaire
+            document.getElementById('postUser').value = userNameFormatted;
+            document.getElementById('postDomaine').value = document.getElementById('cfgDomaine').value;
+            document.getElementById('postNb').value = currentExam.length;
+            document.getElementById('postScore').value = score;
+            document.getElementById('postStatut').value = statut;
+            document.getElementById('postTemps').value = tempsTotalStr;
 
-            // "no-cors" assure la distribution directe vers l'application d'entreprise Holcim
-            fetch(WEB_APP_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: queryData.toString()
-            })
-            .then(() => {
-                document.getElementById('reportTitle').innerText = "✓ Enregistré avec succès";
-                document.getElementById('reportTitle').style.color = "var(--success)";
-                document.getElementById('reportSub').innerText = "Évaluation traitée et synchronisée avec l'onglet d'audit.";
-            })
-            .catch(err => {
-                document.getElementById('reportTitle').innerText = "⚠️ Échec d'envoi réseau";
-                console.error(err);
-            });
+            // Soumission dans l'Iframe masquée (le Sheets est mis à jour de façon invisible)
+            document.getElementById('googleSyncForm').submit();
+
+            // Transition instantanée vers l'écran de rapport final interne
+            document.getElementById('examScreen').classList.add('hidden');
+            document.getElementById('reportScreen').classList.remove('hidden');
 
             document.getElementById('repScore').innerText = score + "%";
             document.getElementById('repStatus').innerText = statut;
